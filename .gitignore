@@ -1,0 +1,10 @@
+*.user*
+*.70e188d
+*.cpp.orig
+fusion-pos-ui.pro.user
+*.autosave
+build/
+.DS_Store
+deploy/
+.qmlls.ini
+node_modules/
