@@ -41,7 +41,6 @@ MouseEventFilter *StreamServer::eventFilter()
 void StreamServer::onConnectedVideo()
 {
     timer.start();
-    // imageSocket.sendTextMessage("sender"); // Идентифицируем как отправитель
     qDebug() << "Connected to server";
 }
 

@@ -1,7 +1,7 @@
 import express from "express";
 import morgan from "morgan";
 import { roomManager } from "./roommanager";
-import { roomsServer } from "./websocketserver";
+import { roomsServer } from "./roomsserver";
 
 const WS_HOST = process.env["WS_PORT"] || "localhost";
 const WS_PORT = process.env["WS_PORT"] || 8080;

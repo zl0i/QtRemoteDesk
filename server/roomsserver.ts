@@ -1,7 +1,7 @@
 import WebSocket, { WebSocketServer } from 'ws';
 import { type Room, roomManager } from './roommanager';
 
-const WS_PORT = process.env["WS_PORT"] || 8080;
+const WS_PORT = Number(process.env["WS_PORT"]) || 8080;
 
 
 
@@ -13,6 +13,7 @@ class RoomsServer {
 
     private sendToRecivers(room: Room) {
         return (message: WebSocket.RawData) => {
+            room.lastActivity = Date.now();
             room.videoReceivers.forEach((receiver) => {
                 if (receiver.readyState === WebSocket.OPEN) {
                     receiver.send(message);
@@ -23,15 +24,29 @@ class RoomsServer {
 
     private sendEventToReciver(room: Room) {
         return (message: WebSocket.RawData) => {
+            room.lastActivity = Date.now();
             room.eventReceiver?.send(message);
         }
     }
 
     private sendEventToSender(room: Room) {
         return (message: WebSocket.RawData) => {
+            room.lastActivity = Date.now();
             room.eventFromSender?.send(message);
         }
     }
+
+    private closeRoom(room: Room) {
+        room.videoFromSender?.close();
+        room.videoReceivers.forEach((receiver) => {
+            receiver.close();
+        });
+        room.eventFromSender?.close();
+        room.eventReceiver?.close();
+        roomManager.deleteRoom(room.code);
+    }
+
+
 
     listen(cb: () => void) {
         this.wsServer.on('connection', (ws, req) => {
@@ -55,6 +70,7 @@ class RoomsServer {
                     console.log('Video sender connected');
                     room.videoFromSender = ws;
                     ws.on('message', this.sendToRecivers(room));
+                    ws.on('close', () => this.closeRoom(room));
                 } else if (typeWS === 'receiver') {
                     console.log('Video receiver connected');
                     room.videoReceivers.add(ws);
@@ -77,6 +93,8 @@ class RoomsServer {
         cb();
     }
 }
+
+
 
 
 const roomsServer = new RoomsServer();
