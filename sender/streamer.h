@@ -4,6 +4,11 @@
 #include <QBuffer>
 #include <QByteArray>
 #include <QGuiApplication>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 #include <QPixmap>
 #include <QQuickWindow>
 #include <QScreen>
@@ -35,6 +40,7 @@ private:
     bool isConnected{false};
 
     MouseEventFilter mouseEvent;
+    QNetworkAccessManager manager;
 
 private slots:
     void onConnectedVideo();
@@ -56,6 +62,7 @@ signals:
     void isConnectedChanged();
 
     void remoteMouseMove(QPoint p);
+    void waitConnect(QString code);
 };
 
 #endif // STREAMER_H

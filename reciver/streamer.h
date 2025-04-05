@@ -26,9 +26,8 @@ private:
     MouseEventFilter mouseEvent;
 
 private slots:
-    void onBinaryMessageReceived(const QByteArray &message);
-    void onTextMessageReceived(const QString &message);
-    void onEventMessageReceived(const QByteArray &message);
+    void onVideoReceived(const QByteArray &message);
+    void onEventReceived(const QByteArray &message);
 
     void onConnectedVideo();
     void onDisconnectedVideo();
@@ -39,7 +38,7 @@ private slots:
     void sendClickMouseEvent(QPoint point);
 
 public slots:
-    void connectToServer();
+    void connectToServer(QString code);
     void disconnectFromServer();
 
 signals:

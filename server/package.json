@@ -3,17 +3,23 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
-    "start": "node main.js"
+    "start": "node main.js",
+    "dev": "ts-node main.ts"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "express": "^5.1.0",
+    "morgan": "^1.10.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
+    "uuid": "^11.1.0",
     "ws": "^8.18.1"
   },
   "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/morgan": "^1.9.9",
     "@types/ws": "^8.18.1"
   }
 }

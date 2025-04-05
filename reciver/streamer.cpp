@@ -5,31 +5,21 @@ VideoReceiver::VideoReceiver(QObject *parent)
 {
     connect(&imageSocket, &QWebSocket::connected, this, &VideoReceiver::onConnectedVideo);
     connect(&imageSocket, &QWebSocket::disconnected, this, &VideoReceiver::onDisconnectedVideo);
-    connect(&imageSocket,
-            &QWebSocket::binaryMessageReceived,
-            this,
-            &VideoReceiver::onBinaryMessageReceived);
-
-    connect(&imageSocket,
-            &QWebSocket::textMessageReceived,
-            this,
-            &VideoReceiver::onTextMessageReceived);
+    connect(&imageSocket, &QWebSocket::binaryMessageReceived, this, &VideoReceiver::onVideoReceived);
 
     connect(&eventSocket, &QWebSocket::connected, this, &VideoReceiver::onConnectedEvent);
     connect(&eventSocket, &QWebSocket::disconnected, this, &VideoReceiver::onDisconnectedEvent);
-    connect(&eventSocket,
-            &QWebSocket::binaryMessageReceived,
-            this,
-            &VideoReceiver::onEventMessageReceived);
+    connect(&eventSocket, &QWebSocket::binaryMessageReceived, this, &VideoReceiver::onEventReceived);
 
     connect(&mouseEvent, &MouseEventFilter::mouseClicked, this, &VideoReceiver::sendClickMouseEvent);
     connect(&mouseEvent, &MouseEventFilter::mouseMoved, this, &VideoReceiver::sendMovedMouseEvent);
 }
 
-void VideoReceiver::connectToServer()
+void VideoReceiver::connectToServer(QString code)
 {
-    imageSocket.open(QUrl("ws://localhost:8080"));
-    eventSocket.open(QUrl("ws://localhost:8081"));
+    QString url = QString{"ws://localhost:8080/rooms/%1"}.arg(code);
+    imageSocket.open(QUrl(url + "/video/receiver"));
+    eventSocket.open(QUrl(url + "/events/receiver"));
 }
 
 void VideoReceiver::disconnectFromServer()
@@ -43,20 +33,13 @@ QByteArray VideoReceiver::videoFrame() const
     return m_currentFrame;
 }
 
-void VideoReceiver::onBinaryMessageReceived(const QByteArray &message)
+void VideoReceiver::onVideoReceived(const QByteArray &message)
 {
     m_currentFrame = message;
     emit frameUpdated();
 }
 
-void VideoReceiver::onTextMessageReceived(const QString &message)
-{
-    // qDebug() << "recive text";
-    // m_currentFrame = message.toLatin1();
-    // emit frameUpdated();
-}
-
-void VideoReceiver::onEventMessageReceived(const QByteArray &message)
+void VideoReceiver::onEventReceived(const QByteArray &message)
 {
     QStringList list = QString{message}.split(";");
     QString type = list.at(0);
@@ -85,7 +68,6 @@ void VideoReceiver::sendClickMouseEvent(QPoint point)
 
 void VideoReceiver::onConnectedVideo()
 {
-    imageSocket.sendTextMessage("receiver");
     m_isConnected = true;
     emit connectionChanged();
 }
@@ -96,9 +78,6 @@ void VideoReceiver::onDisconnectedVideo()
     emit connectionChanged();
 }
 
-void VideoReceiver::onConnectedEvent()
-{
-    eventSocket.sendTextMessage("receiver");
-}
+void VideoReceiver::onConnectedEvent() {}
 
 void VideoReceiver::onDisconnectedEvent() {}

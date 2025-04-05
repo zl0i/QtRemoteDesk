@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls.Fusion
 
+import "./qml"
+
 ApplicationWindow {
     width: 640
     height: 480
@@ -12,6 +14,10 @@ ApplicationWindow {
         function onRemoteMouseMove(point) {
             _removeCursor.x = point.x
             _removeCursor.y = point.y
+        }
+        function onWaitConnect(code) {
+            _dialog.accessCode = code
+            _dialog.statusConnect = "wait_connect"
         }
     }
 
@@ -32,11 +38,17 @@ ApplicationWindow {
         spacing: 20
         Button {
             text: "start"
-            onClicked: () => streamer.start()
+            onClicked: function () {
+                streamer.start()
+                _dialog.statusConnect = "pending"
+                _dialog.open()
+            }
         }
         Button {
             text: "stop"
-            onClicked: () => streamer.stop()
+            onClicked: function () {
+                streamer.stop()
+            }
         }
 
         Row {
@@ -57,5 +69,9 @@ ApplicationWindow {
                 text: parent.counter
             }
         }
+    }
+
+    RemoteControlDialog {
+        id: _dialog
     }
 }

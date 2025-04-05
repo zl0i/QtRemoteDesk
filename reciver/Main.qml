@@ -45,10 +45,16 @@ ApplicationWindow {
             anchors.centerIn: parent
             spacing: 20
 
+            TextField {
+                id: _codeField
+                height: 20
+                placeholderText: "Введите код"
+            }
+
             Button {
                 text: "Connect"
                 enabled: !reciver.isConnected
-                onClicked: reciver.connectToServer()
+                onClicked: reciver.connectToServer(_codeField.text)
             }
 
             Button {

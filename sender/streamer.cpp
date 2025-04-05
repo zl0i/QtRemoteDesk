@@ -41,8 +41,7 @@ MouseEventFilter *StreamServer::eventFilter()
 void StreamServer::onConnectedVideo()
 {
     timer.start();
-    imageSocket.sendTextMessage("sender"); // Идентифицируем как отправитель
-
+    // imageSocket.sendTextMessage("sender"); // Идентифицируем как отправитель
     qDebug() << "Connected to server";
 }
 
@@ -55,7 +54,6 @@ void StreamServer::onConnectedEvent()
 {
     isConnected = true;
     emit isConnectedChanged();
-    eventSocket.sendTextMessage("sender");
 }
 
 void StreamServer::onDisconnectedEvent()
@@ -96,8 +94,6 @@ void StreamServer::broadcastFrame()
     QByteArray base64 = buffer.toBase64();
     QString dataUrl = "data:image/jpeg;base64," + QString::fromLatin1(base64);
 
-    qDebug() << base64.size() / 100 << dataUrl.size() / 100;
-    // Отправка через WebSocket
     if (imageSocket.isValid()) {
         imageSocket.sendTextMessage(dataUrl.toLocal8Bit());
     }
@@ -106,11 +102,14 @@ void StreamServer::broadcastFrame()
 void StreamServer::eventRecived(const QByteArray &message)
 {
     QStringList list = QString{message}.split(";");
+
+    if (list.count() < 2)
+        return;
+
     QString type = list.at(0);
     int x = list.at(1).toInt();
     int y = list.at(2).toInt();
     if (list.at(0) == "click") {
-        // emit mouseClick({x, y});
         QPointF pos(x, y);
         QPoint globalPos = window->mapToGlobal(QPoint(x, y));
 
@@ -151,8 +150,28 @@ void StreamServer::sendClickMouseEvent(QPoint point)
 
 void StreamServer::start()
 {
-    imageSocket.open(QUrl("ws://localhost:8080"));
-    eventSocket.open(QUrl("ws://localhost:8081"));
+    QNetworkRequest req(QUrl("http://localhost:3000/rooms"));
+
+    QNetworkReply *reply = manager.post(req, QByteArray{});
+
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        if (reply->error() != QNetworkReply::NoError) {
+            qDebug() << reply->error() << reply->errorString();
+            delete reply;
+            return;
+        }
+
+        QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+
+        QJsonObject data = doc.object();
+        QString videoEndpoint = data.value("ws_video").toString();
+        QString eventEndpoint = data.value("ws_events").toString();
+
+        imageSocket.open(QUrl(videoEndpoint + "/sender"));
+        eventSocket.open(QUrl(eventEndpoint + "/sender"));
+
+        emit waitConnect(data.value("code").toString());
+    });
 }
 
 void StreamServer::stop()
