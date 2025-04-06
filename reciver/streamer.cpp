@@ -23,9 +23,26 @@ VideoReceiver::VideoReceiver(QObject *parent)
 
 void VideoReceiver::connectToServer(QString code)
 {
-    QString url = QString{"ws://localhost:8080/rooms/%1"}.arg(code);
-    imageSocket.open(QUrl(url + "/video/receiver"));
-    eventSocket.open(QUrl(url + "/events/receiver"));
+    QNetworkRequest req(QUrl("http://localhost:3000/rooms/" + code));
+
+    QNetworkReply *reply = manager.get(req);
+
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        if (reply->error() != QNetworkReply::NoError) {
+            qDebug() << reply->error() << reply->errorString();
+            delete reply;
+            return;
+        }
+
+        QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+
+        QJsonObject data = doc.object();
+        QString videoEndpoint = data.value("ws_video").toString();
+        QString eventEndpoint = data.value("ws_events").toString();
+
+        imageSocket.open(QUrl(videoEndpoint + "/receiver"));
+        eventSocket.open(QUrl(eventEndpoint + "/receiver"));
+    });
 }
 
 void VideoReceiver::disconnectFromServer()

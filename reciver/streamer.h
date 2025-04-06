@@ -3,8 +3,12 @@
 
 #include <QImage>
 #include <QJsonDocument>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 #include <QObject>
 #include <QWebSocket>
+
 #include "mouseeventfilter.h"
 
 class VideoReceiver : public QObject
@@ -25,6 +29,7 @@ private:
     QByteArray m_currentFrame;
     bool m_isConnected = false;
     MouseEventFilter mouseEvent;
+    QNetworkAccessManager manager;
 
 private slots:
     void onVideoReceived(const QByteArray &message);
