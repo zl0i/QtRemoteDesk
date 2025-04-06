@@ -1,5 +1,5 @@
-import { api } from "./api";
-import { roomsServer } from "./roomsserver";
+import { api } from "./src/api";
+import { roomsServer } from "./src/roomsserver";
 
 
 

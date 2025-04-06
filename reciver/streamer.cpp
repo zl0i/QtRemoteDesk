@@ -21,7 +21,7 @@ VideoReceiver::VideoReceiver(QObject *parent)
     connect(&mouseEvent, &MouseEventFilter::newEvent, this, &VideoReceiver::sendEvent);
 }
 
-void VideoReceiver::connectToServer(QString code)
+void VideoReceiver::connectVideo(QString code)
 {
     QNetworkRequest req(QUrl("http://localhost:3000/rooms/" + code));
 
@@ -41,7 +41,7 @@ void VideoReceiver::connectToServer(QString code)
         QString eventEndpoint = data.value("ws_events").toString();
 
         imageSocket.open(QUrl(videoEndpoint + "/receiver"));
-        eventSocket.open(QUrl(eventEndpoint + "/receiver"));
+        eventUrl = QUrl(eventEndpoint + "/receiver");
     });
 }
 
@@ -49,6 +49,7 @@ void VideoReceiver::disconnectFromServer()
 {
     imageSocket.close();
     eventSocket.close();
+    eventUrl.clear();
 }
 
 QByteArray VideoReceiver::videoFrame() const
@@ -94,3 +95,8 @@ void VideoReceiver::onDisconnectedVideo()
 void VideoReceiver::onConnectedEvent() {}
 
 void VideoReceiver::onDisconnectedEvent() {}
+
+void VideoReceiver::connectEvent()
+{
+    eventSocket.open(eventUrl);
+}

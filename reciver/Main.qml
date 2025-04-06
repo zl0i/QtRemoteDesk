@@ -54,13 +54,19 @@ ApplicationWindow {
             Button {
                 text: "Connect"
                 enabled: !reciver.isConnected
-                onClicked: reciver.connectToServer(_codeField.text)
+                onClicked: reciver.connectVideo(_codeField.text)
             }
 
             Button {
                 text: "Disconnect"
                 enabled: reciver.isConnected
                 onClicked: reciver.disconnectFromServer()
+            }
+
+            Button {
+                text: "Control"
+                enabled: reciver.isConnected
+                onClicked: reciver.connectEvent()
             }
         }
     }

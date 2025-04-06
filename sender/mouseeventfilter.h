@@ -11,7 +11,18 @@
 class EventFactory
 {
 public:
-    enum EventSource { UnknowEvent, MouseEvent, KeyboardEvent, WheelEvent };
+    enum EventSource {
+        MouseEvent,
+        KeyboardEvent,
+        WheelEvent,
+
+        FirstVideoReceiverConnected = QEvent::User + 1,
+        NewVideoReceiverConnected,
+        LastVideoReceiverDisconnected,
+        EventReceiverConnected,
+        EventReceiverDisconnected,
+        UnknowEvent = QEvent::MaxUser,
+    };
 
     static EventSource sourceEvent(const QJsonObject &object)
     {
@@ -21,7 +32,10 @@ public:
             return EventSource::MouseEvent;
         } else if (type == QEvent::KeyPress || type == QEvent::KeyRelease) {
             return EventSource::KeyboardEvent;
+        } else if (type > QEvent::User) {
+            return static_cast<EventSource>(type);
         }
+
         return EventSource::UnknowEvent;
     }
 

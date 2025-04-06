@@ -112,6 +112,10 @@ void StreamServer::eventRecived(const QByteArray &message)
     } else if (source == EventFactory::KeyboardEvent) {
         QKeyEvent event = EventFactory::deserializeKeyboardEvent(doc.object());
         QCoreApplication::sendEvent(window, &event);
+    } else if (source == EventFactory::FirstVideoReceiverConnected) {
+        emit videoReceiverConnected();
+    } else if (source == EventFactory::EventReceiverConnected) {
+        emit eventReceiverConnected();
     }
 }
 

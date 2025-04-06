@@ -62,6 +62,8 @@ signals:
 
     void remoteMouseMove(QPoint p);
     void waitConnect(QString code);
+    void videoReceiverConnected();
+    void eventReceiverConnected();
 };
 
 #endif // STREAMER_H

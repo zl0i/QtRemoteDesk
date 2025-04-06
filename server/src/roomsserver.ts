@@ -3,6 +3,13 @@ import { type Room, roomManager } from './roommanager';
 
 const WS_PORT = Number(process.env["WS_PORT"]) || 8080;
 
+enum Event {
+    FirstVideoReceiverConnected = 1001,
+    NewVideoReceiverConnected = 1002,
+    LastVideoReceiverDisconnected = 1003,
+    EventReceiverConnected = 1004,
+    EventReceiverDisconnected = 1005
+}
 
 
 class RoomsServer {
@@ -67,23 +74,44 @@ class RoomsServer {
 
             if (typeConnect === 'video') {
                 if (typeWS === 'sender') {
-                    console.log('Video sender connected');
+                    console.log(new Date().toISOString(), `Video sender connected for room ${room.code}`);
                     room.videoFromSender = ws;
                     ws.on('message', this.sendToRecivers(room));
                     ws.on('close', () => this.closeRoom(room));
                 } else if (typeWS === 'receiver') {
-                    console.log('Video receiver connected');
+                    console.log(new Date().toISOString(), `Video receiver connected for room ${room.code}`);
                     room.videoReceivers.add(ws);
+                    if (room.videoReceivers.size === 1) {
+                        const encoder = new TextEncoder();
+                        const binaryData = encoder.encode(JSON.stringify({ type: Event.FirstVideoReceiverConnected, code: room.code }));
+                        room.eventFromSender?.send(binaryData);
+                    }
+                    ws.on('close', () => {
+                        room.videoReceivers.delete(ws);
+                        if (room.videoReceivers.size === 0) {
+                            const encoder = new TextEncoder();
+                            const binaryData = encoder.encode(JSON.stringify({ type: Event.LastVideoReceiverDisconnected, code: room.code }));
+                            room.eventFromSender?.send(binaryData);
+                        }
+                    });
                 }
             } else if (typeConnect === 'events') {
                 if (typeWS === 'sender') {
-                    console.log('Event sender connected');
+                    console.log(new Date().toISOString(), `Event sender connected for room ${room.code}`);
                     room.eventFromSender = ws;
                     ws.on('message', this.sendEventToReciver(room));
                 } else if (typeWS === 'receiver') {
-                    console.log('Event receiver connected');
+                    console.log(new Date().toISOString(), `Event receiver connected for room ${room.code}`);
                     room.eventReceiver = ws;
                     ws.on('message', this.sendEventToSender(room));
+                    ws.on('close', () => {
+                        const encoder = new TextEncoder();
+                        const binaryData = encoder.encode(JSON.stringify({ type: Event.EventReceiverDisconnected, code: room.code }));
+                        room.eventFromSender?.send(binaryData);
+                    });
+                    const encoder = new TextEncoder();
+                    const binaryData = encoder.encode(JSON.stringify({ type: Event.EventReceiverConnected, code: room.code }));
+                    room.eventFromSender?.send(binaryData);
                 }
             } else {
                 ws.close();

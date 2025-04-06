@@ -19,6 +19,21 @@ ApplicationWindow {
             _dialog.accessCode = code
             _dialog.statusConnect = "wait_connect"
         }
+        function onVideoReceiverConnected() {
+            _remoteBorder.visible = true
+            _dialog.close()
+        }
+        function onEventReceiverConnected() {
+            _removeCursor.visible = true
+        }
+    }
+
+    background: Rectangle {
+        color: "#1D1D1D"
+        RemoteBorder {
+            id: _remoteBorder
+            visible: false
+        }
     }
 
     Rectangle {
@@ -27,7 +42,7 @@ ApplicationWindow {
         width: 10
         height: 10
         radius: 5
-        visible: streamer.isConnected ?? false
+        visible: false
         opacity: 0.5
         color: "blue"
     }
@@ -47,6 +62,8 @@ ApplicationWindow {
         Button {
             text: "stop"
             onClicked: function () {
+                _remoteBorder.visible = false
+                _removeCursor.visible = false
                 streamer.stop()
             }
         }

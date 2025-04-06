@@ -11,6 +11,12 @@ Dialog {
     y: parent.height / 2 - height / 2
     width: 300
     height: 200
+    dim: true
+    modal: false
+
+    Overlay.modeless: Rectangle {
+        color: "#80000000"
+    }
 
     background: Rectangle {
         radius: 10

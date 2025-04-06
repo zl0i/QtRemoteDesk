@@ -25,6 +25,7 @@ public:
 
 private:
     QWebSocket imageSocket;
+    QUrl eventUrl;
     QWebSocket eventSocket;
     QByteArray m_currentFrame;
     bool m_isConnected = false;
@@ -44,7 +45,8 @@ private slots:
     void onDisconnectedEvent();
 
 public slots:
-    void connectToServer(QString code);
+    void connectVideo(QString code);
+    void connectEvent();
     void disconnectFromServer();
 
 signals:
