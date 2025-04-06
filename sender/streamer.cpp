@@ -2,6 +2,7 @@
 
 StreamServer::StreamServer(QObject *parent)
     : QObject(parent)
+    , mouseEvent({QEvent::MouseMove})
 {
     timer.setInterval(1000 / 10); // 10 FPS
     connect(&timer, &QTimer::timeout, this, &StreamServer::broadcastFrame);
@@ -21,8 +22,7 @@ StreamServer::StreamServer(QObject *parent)
             &StreamServer::onError);
     connect(&eventSocket, &QWebSocket::binaryMessageReceived, this, &StreamServer::eventRecived);
 
-    connect(&mouseEvent, &MouseEventFilter::mouseClicked, this, &StreamServer::sendClickMouseEvent);
-    connect(&mouseEvent, &MouseEventFilter::mouseMoved, this, &StreamServer::sendMovedMouseEvent);
+    connect(&mouseEvent, &MouseEventFilter::newEvent, this, &StreamServer::sendEvent);
 }
 
 void StreamServer::setQmlEngine(QQmlApplicationEngine *engine)
@@ -100,50 +100,26 @@ void StreamServer::broadcastFrame()
 
 void StreamServer::eventRecived(const QByteArray &message)
 {
-    QStringList list = QString{message}.split(";");
-
-    if (list.count() < 2)
-        return;
-
-    QString type = list.at(0);
-    int x = list.at(1).toInt();
-    int y = list.at(2).toInt();
-    if (list.at(0) == "click") {
-        QPointF pos(x, y);
-        QPoint globalPos = window->mapToGlobal(QPoint(x, y));
-
-        QMouseEvent press(QEvent::MouseButtonPress,
-                          pos,
-                          globalPos,
-                          Qt::LeftButton,
-                          Qt::LeftButton,
-                          Qt::NoModifier);
-        QCoreApplication::sendEvent(window, &press);
-
-        QMouseEvent release(QEvent::MouseButtonRelease,
-                            pos,
-                            globalPos,
-                            Qt::LeftButton,
-                            Qt::LeftButton,
-                            Qt::NoModifier);
-        QCoreApplication::sendEvent(window, &release);
-
-    } else if (list.at(0) == "move") {
-        emit remoteMouseMove({x, y});
+    QJsonDocument doc = QJsonDocument::fromJson(message);
+    auto source = EventFactory::sourceEvent(doc.object());
+    if (source == EventFactory::MouseEvent) {
+        QMouseEvent event = EventFactory::deserializeMouseEvent(doc.object(), window);
+        if (event.type() == QEvent::MouseMove) {
+            emit remoteMouseMove(event.pos());
+        } else {
+            QCoreApplication::sendEvent(window, &event);
+        }
+    } else if (source == EventFactory::KeyboardEvent) {
+        QKeyEvent event = EventFactory::deserializeKeyboardEvent(doc.object());
+        QCoreApplication::sendEvent(window, &event);
     }
 }
 
-void StreamServer::sendMovedMouseEvent(QPoint point)
+void StreamServer::sendEvent(QEvent *event)
 {
     if (eventSocket.isValid()) {
-        eventSocket.sendTextMessage(QString{"move;%1;%2"}.arg(point.x()).arg(point.y()));
-    }
-}
-
-void StreamServer::sendClickMouseEvent(QPoint point)
-{
-    if (eventSocket.isValid()) {
-        eventSocket.sendTextMessage(QString{"click;%1;%2"}.arg(point.x()).arg(point.y()));
+        QJsonObject object = EventFactory::serialize(event);
+        eventSocket.sendBinaryMessage(QJsonDocument{object}.toJson());
     }
 }
 

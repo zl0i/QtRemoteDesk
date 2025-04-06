@@ -69,6 +69,36 @@ ApplicationWindow {
                 text: parent.counter
             }
         }
+        TextField {
+            width: 200
+            height: 30
+        }
+    }
+
+    ListView {
+        x: 250
+        y: 20
+        width: 200
+        height: parent.height - 40
+        clip: true
+        model: 50
+        delegate: Label {
+
+            required property int index
+            required property var modelData
+
+            width: 200
+            height: 20
+            verticalAlignment: Text.AlignVCenter
+            color: "#FFFFFF"
+            text: index
+            Rectangle {
+                y: parent.height - 1
+                width: parent.width
+                height: 1
+                color: "#C4C4C4"
+            }
+        }
     }
 
     RemoteControlDialog {

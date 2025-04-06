@@ -48,11 +48,10 @@ private slots:
     void onConnectedEvent();
     void onDisconnectedEvent();
     void onError(QAbstractSocket::SocketError error);
+
     void broadcastFrame();
     void eventRecived(const QByteArray &message);
-
-    void sendMovedMouseEvent(QPoint point);
-    void sendClickMouseEvent(QPoint point);
+    void sendEvent(QEvent *event);
 
 public slots:
     void start();

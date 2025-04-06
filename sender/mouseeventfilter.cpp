@@ -1,17 +1,14 @@
 #include "mouseeventfilter.h"
 
-MouseEventFilter::MouseEventFilter(QObject *parent)
+MouseEventFilter::MouseEventFilter(QList<QEvent::Type> filter, QObject *parent)
     : QObject{parent}
+    , filter(filter)
 {}
 
 bool MouseEventFilter::eventFilter(QObject *obj, QEvent *event)
 {
-    if (event->type() == QEvent::MouseButtonPress) {
-        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
-        emit mouseClicked(mouseEvent->pos());
-    } else if (event->type() == QEvent::MouseMove) {
-        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
-        emit mouseMoved(mouseEvent->pos());
+    if (filter.contains(event->type())) {
+        emit newEvent(event);
     }
     return QObject::eventFilter(obj, event);
 }

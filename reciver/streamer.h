@@ -2,6 +2,7 @@
 #define STREAMER_H
 
 #include <QImage>
+#include <QJsonDocument>
 #include <QObject>
 #include <QWebSocket>
 #include "mouseeventfilter.h"
@@ -29,13 +30,13 @@ private slots:
     void onVideoReceived(const QByteArray &message);
     void onEventReceived(const QByteArray &message);
 
+    void sendEvent(QEvent *event);
+
     void onConnectedVideo();
     void onDisconnectedVideo();
 
     void onConnectedEvent();
     void onDisconnectedEvent();
-    void sendMovedMouseEvent(QPoint point);
-    void sendClickMouseEvent(QPoint point);
 
 public slots:
     void connectToServer(QString code);
@@ -43,8 +44,7 @@ public slots:
 
 signals:
     void frameUpdated();
-    void mouseClick(QPoint p);
-    void mouseMove(QPoint p);
+    void mouseMove(QPointF p);
     void connectionChanged();
 };
 

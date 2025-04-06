@@ -2,6 +2,13 @@
 
 VideoReceiver::VideoReceiver(QObject *parent)
     : QObject(parent)
+    , mouseEvent({QEvent::MouseButtonPress,
+                  QEvent::MouseButtonRelease,
+                  QEvent::MouseMove,
+                  QEvent::MouseButtonDblClick,
+                  QEvent::KeyPress,
+                  QEvent::KeyRelease,
+                  QEvent::Wheel})
 {
     connect(&imageSocket, &QWebSocket::connected, this, &VideoReceiver::onConnectedVideo);
     connect(&imageSocket, &QWebSocket::disconnected, this, &VideoReceiver::onDisconnectedVideo);
@@ -11,8 +18,7 @@ VideoReceiver::VideoReceiver(QObject *parent)
     connect(&eventSocket, &QWebSocket::disconnected, this, &VideoReceiver::onDisconnectedEvent);
     connect(&eventSocket, &QWebSocket::binaryMessageReceived, this, &VideoReceiver::onEventReceived);
 
-    connect(&mouseEvent, &MouseEventFilter::mouseClicked, this, &VideoReceiver::sendClickMouseEvent);
-    connect(&mouseEvent, &MouseEventFilter::mouseMoved, this, &VideoReceiver::sendMovedMouseEvent);
+    connect(&mouseEvent, &MouseEventFilter::newEvent, this, &VideoReceiver::sendEvent);
 }
 
 void VideoReceiver::connectToServer(QString code)
@@ -41,28 +47,18 @@ void VideoReceiver::onVideoReceived(const QByteArray &message)
 
 void VideoReceiver::onEventReceived(const QByteArray &message)
 {
-    QStringList list = QString{message}.split(";");
-    QString type = list.at(0);
-    int x = list.at(1).toInt();
-    int y = list.at(2).toInt();
-    if (list.at(0) == "click") {
-        emit mouseClick({x, y});
-    } else if (list.at(0) == "move") {
-        emit mouseMove({x, y});
+    QJsonDocument doc = QJsonDocument::fromJson(message);
+    QPointF point = EventSerializer::deserializeOnlyMouseMove(doc.object());
+    if (!point.isNull()) {
+        emit mouseMove(point);
     }
 }
 
-void VideoReceiver::sendMovedMouseEvent(QPoint point)
+void VideoReceiver::sendEvent(QEvent *event)
 {
     if (eventSocket.isValid()) {
-        eventSocket.sendTextMessage(QString{"move;%1;%2"}.arg(point.x()).arg(point.y()));
-    }
-}
-
-void VideoReceiver::sendClickMouseEvent(QPoint point)
-{
-    if (eventSocket.isValid()) {
-        eventSocket.sendTextMessage(QString{"click;%1;%2"}.arg(point.x()).arg(point.y()));
+        QJsonObject object = EventSerializer::serialize(event);
+        eventSocket.sendBinaryMessage(QJsonDocument{object}.toJson());
     }
 }
 
