@@ -10,8 +10,12 @@
 
 class EventSerializer
 {
+private:
+    static const inline int MAX_WIDTH_SAMPLES = 65535;
+    static const inline int MAX_HEIGHT_SAMPLES = 65535;
+
 public:
-    static QJsonObject serialize(QEvent *event)
+    static QJsonObject serialize(QEvent *event, QSize windowSize)
     {
         QJsonObject json;
         json["type"] = event->type();
@@ -20,8 +24,8 @@ public:
             QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
             json["button"] = static_cast<qint64>(mouseEvent->button());
             json["buttons"] = static_cast<qint64>(mouseEvent->buttons());
-            json["x"] = mouseEvent->pos().x();
-            json["y"] = mouseEvent->pos().y();
+            json["x"] = mouseEvent->pos().x() * MAX_WIDTH_SAMPLES / windowSize.width();
+            json["y"] = mouseEvent->pos().y() * MAX_HEIGHT_SAMPLES / windowSize.height();
             json["modifiers"] = static_cast<qint64>(mouseEvent->modifiers());
         } else if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease) {
             QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
@@ -44,8 +48,8 @@ public:
             Qt::MouseButton button = static_cast<Qt::MouseButton>(object["button"].toInteger());
             Qt::MouseButtons buttons = QFlags(
                 static_cast<Qt::MouseButton>(object["button"].toInteger()));
-            double x = object["x"].toDouble();
-            double y = object["y"].toDouble();
+            double x = object["x"].toDouble() * window->size().width() / MAX_WIDTH_SAMPLES;
+            double y = object["y"].toDouble() * window->size().height() / MAX_HEIGHT_SAMPLES;
             QPointF pos(x, y);
             QPoint globalPos = window->mapToGlobal(QPoint(x, y));
             Qt::KeyboardModifiers modifiers = static_cast<Qt::KeyboardModifiers>(
@@ -62,7 +66,7 @@ public:
         return nullptr;
     }
 
-    static QPointF deserializeOnlyMouseMove(const QJsonObject &object)
+    static QPointF deserializeOnlyMouseMove(const QJsonObject &object, QSize windowSize)
     {
         QEvent::Type type = static_cast<QEvent::Type>(object.value("type").toInteger());
         if (type == 0) {
@@ -70,8 +74,8 @@ public:
         }
 
         if (type == QEvent::MouseMove) {
-            double x = object["x"].toDouble();
-            double y = object["y"].toDouble();
+            double x = object["x"].toDouble() * windowSize.width() / MAX_WIDTH_SAMPLES;
+            double y = object["y"].toDouble() * windowSize.height() / MAX_HEIGHT_SAMPLES;
             return QPointF{x, y};
         }
         return QPointF{};

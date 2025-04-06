@@ -7,6 +7,7 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QObject>
+#include <QQmlApplicationEngine>
 #include <QWebSocket>
 
 #include "mouseeventfilter.h"
@@ -20,10 +21,12 @@ class VideoReceiver : public QObject
 public:
     explicit VideoReceiver(QObject *parent = nullptr);
 
+    void setQmlEngine(QQmlApplicationEngine *engine);
     QByteArray videoFrame() const;
     MouseEventFilter *eventFilter() { return &mouseEvent; };
 
 private:
+    QQuickWindow *window;
     QWebSocket imageSocket;
     QUrl eventUrl;
     QWebSocket eventSocket;

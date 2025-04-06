@@ -122,7 +122,7 @@ void StreamServer::eventRecived(const QByteArray &message)
 void StreamServer::sendEvent(QEvent *event)
 {
     if (eventSocket.isValid()) {
-        QJsonObject object = EventFactory::serialize(event);
+        QJsonObject object = EventFactory::serialize(event, window->size());
         eventSocket.sendBinaryMessage(QJsonDocument{object}.toJson());
     }
 }

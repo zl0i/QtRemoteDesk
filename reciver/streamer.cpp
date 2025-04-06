@@ -21,6 +21,14 @@ VideoReceiver::VideoReceiver(QObject *parent)
     connect(&mouseEvent, &MouseEventFilter::newEvent, this, &VideoReceiver::sendEvent);
 }
 
+void VideoReceiver::setQmlEngine(QQmlApplicationEngine *engine)
+{
+    if (!engine->rootObjects().isEmpty()) {
+        QObject *rootObject = engine->rootObjects().first();
+        window = qobject_cast<QQuickWindow *>(rootObject);
+    }
+}
+
 void VideoReceiver::connectVideo(QString code)
 {
     QNetworkRequest req(QUrl("http://localhost:3000/rooms/" + code));
@@ -66,7 +74,7 @@ void VideoReceiver::onVideoReceived(const QByteArray &message)
 void VideoReceiver::onEventReceived(const QByteArray &message)
 {
     QJsonDocument doc = QJsonDocument::fromJson(message);
-    QPointF point = EventSerializer::deserializeOnlyMouseMove(doc.object());
+    QPointF point = EventSerializer::deserializeOnlyMouseMove(doc.object(), window->size());
     if (!point.isNull()) {
         emit mouseMove(point);
     }
@@ -75,7 +83,7 @@ void VideoReceiver::onEventReceived(const QByteArray &message)
 void VideoReceiver::sendEvent(QEvent *event)
 {
     if (eventSocket.isValid()) {
-        QJsonObject object = EventSerializer::serialize(event);
+        QJsonObject object = EventSerializer::serialize(event, window->size());
         eventSocket.sendBinaryMessage(QJsonDocument{object}.toJson());
     }
 }
