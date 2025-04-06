@@ -18,9 +18,12 @@ class RoomManager {
     generateRoomCode() {
         const letters = '0123456789';
         let code = '';
-        for (let i = 0; i < 6; i++) {
-            code += letters[Math.floor(Math.random() * letters.length)];
-        }
+
+        do {
+            for (let i = 0; i < 6; i++) {
+                code += letters[Math.floor(Math.random() * letters.length)];
+            }
+        } while (this.rooms.has(code));
         return code;
     }
 
