@@ -97,9 +97,8 @@ void StreamServer::eventRecived(const QByteArray &message)
         QMouseEvent event = EventFactory::deserializeMouseEvent(doc.object(), window);
         if (event.type() == QEvent::MouseMove) {
             emit remoteMouseMove(event.pos());
-        } else {
-            QCoreApplication::sendEvent(window, &event);
         }
+        QCoreApplication::sendEvent(window, &event);
     } else if (source == EventFactory::KeyboardEvent) {
         QKeyEvent event = EventFactory::deserializeKeyboardEvent(doc.object());
         QCoreApplication::sendEvent(window, &event);

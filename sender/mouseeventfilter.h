@@ -74,14 +74,13 @@ public:
 
         Qt::MouseButton button = static_cast<Qt::MouseButton>(object["button"].toInteger());
         Qt::MouseButtons buttons = QFlags(
-            static_cast<Qt::MouseButton>(object["button"].toInteger()));
+            static_cast<Qt::MouseButton>(object["buttons"].toInteger()));
         double x = object["x"].toDouble() * window->size().width() / MAX_WIDTH_SAMPLES;
         double y = object["y"].toDouble() * window->size().height() / MAX_HEIGHT_SAMPLES;
         QPointF pos(x, y);
         QPoint globalPos = window->mapToGlobal(QPoint(x, y));
         Qt::KeyboardModifiers modifiers = static_cast<Qt::KeyboardModifiers>(
             object["modifiers"].toInt());
-
         return QMouseEvent(type, pos, globalPos, button, buttons, modifiers);
     }
 
