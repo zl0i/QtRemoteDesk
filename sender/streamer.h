@@ -17,6 +17,7 @@
 #include <QWebSocketServer>
 #include <qqmlapplicationengine.h>
 
+#include "fpsrater.h"
 #include "mouseeventfilter.h"
 
 class StreamServer : public QObject
@@ -34,13 +35,14 @@ public:
 
 private:
     QQuickWindow *window;
-    QTimer timer;
+
     QWebSocket imageSocket;
     QWebSocket eventSocket;
     bool isConnected{false};
 
     MouseEventFilter mouseEvent;
     QNetworkAccessManager manager;
+    FpsRater fpsRater;
 
 private slots:
     void onConnectedVideo();
@@ -49,7 +51,7 @@ private slots:
     void onDisconnectedEvent();
     void onError(QAbstractSocket::SocketError error);
 
-    void broadcastFrame();
+    void captureAndSendScreen(int quality);
     void eventRecived(const QByteArray &message);
     void sendEvent(QEvent *event);
 

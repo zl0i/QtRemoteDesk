@@ -3,23 +3,17 @@
 StreamServer::StreamServer(QObject *parent)
     : QObject(parent)
     , mouseEvent({QEvent::MouseMove})
+    , fpsRater(&imageSocket)
 {
-    timer.setInterval(1000 / 10); // 10 FPS
-    connect(&timer, &QTimer::timeout, this, &StreamServer::broadcastFrame);
+    connect(&fpsRater, &FpsRater::sendFrame, this, &StreamServer::captureAndSendScreen);
 
     connect(&imageSocket, &QWebSocket::connected, this, &StreamServer::onConnectedVideo);
     connect(&imageSocket, &QWebSocket::disconnected, this, &StreamServer::onDisconnectedVideo);
-    connect(&imageSocket,
-            QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
-            this,
-            &StreamServer::onError);
+    connect(&imageSocket, &QWebSocket::errorOccurred, this, &StreamServer::onError);
 
     connect(&eventSocket, &QWebSocket::connected, this, &StreamServer::onConnectedEvent);
     connect(&eventSocket, &QWebSocket::disconnected, this, &StreamServer::onDisconnectedEvent);
-    connect(&eventSocket,
-            QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
-            this,
-            &StreamServer::onError);
+    connect(&eventSocket, &QWebSocket::errorOccurred, this, &StreamServer::onError);
     connect(&eventSocket, &QWebSocket::binaryMessageReceived, this, &StreamServer::eventRecived);
 
     connect(&mouseEvent, &MouseEventFilter::newEvent, this, &StreamServer::sendEvent);
@@ -40,7 +34,7 @@ MouseEventFilter *StreamServer::eventFilter()
 
 void StreamServer::onConnectedVideo()
 {
-    timer.start();
+    fpsRater.start();
     qDebug() << "Connected to server";
 }
 
@@ -64,7 +58,7 @@ void StreamServer::onDisconnectedEvent()
 
 void StreamServer::onError(QAbstractSocket::SocketError error)
 {
-    timer.stop();
+    fpsRater.stop();
     if (imageSocket.isValid()) {
         imageSocket.close();
     }
@@ -74,7 +68,7 @@ void StreamServer::onError(QAbstractSocket::SocketError error)
     qWarning() << "WebSocket error:" << error;
 }
 
-void StreamServer::broadcastFrame()
+void StreamServer::captureAndSendScreen(int quality)
 {
     // QScreen *screen = QGuiApplication::primaryScreen();
     if (!window)
@@ -88,7 +82,7 @@ void StreamServer::broadcastFrame()
     QByteArray buffer;
     QBuffer b(&buffer);
     b.open(QIODevice::WriteOnly);
-    image.save(&b, "JPEG");
+    image.save(&b, "JPEG", quality);
 
     if (imageSocket.isValid()) {
         imageSocket.sendBinaryMessage(b.buffer());
@@ -152,7 +146,7 @@ void StreamServer::start()
 
 void StreamServer::stop()
 {
-    timer.stop();
+    fpsRater.stop();
     imageSocket.close();
     eventSocket.close();
 }
