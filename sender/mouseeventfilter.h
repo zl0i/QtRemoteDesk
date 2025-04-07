@@ -6,6 +6,7 @@
 #include <QMouseEvent>
 #include <QObject>
 #include <QPointF>
+#include <QWheelEvent>
 #include <qquickwindow.h>
 
 class EventFactory
@@ -36,6 +37,8 @@ public:
             return EventSource::MouseEvent;
         } else if (type == QEvent::KeyPress || type == QEvent::KeyRelease) {
             return EventSource::KeyboardEvent;
+        } else if (type == QEvent::Wheel) {
+            return EventSource::WheelEvent;
         } else if (type > QEvent::User) {
             return static_cast<EventSource>(type);
         }
@@ -90,6 +93,32 @@ public:
             object["modifiers"].toInt());
         QString text = object["text"].toString();
         return QKeyEvent(type, key, modifiers, text);
+    }
+
+    static QWheelEvent deserializeWheelEvent(const QJsonObject &object, QQuickWindow *window)
+    {
+        int x = object.value("x").toInt() * window->size().width() / MAX_WIDTH_SAMPLES;
+        int y = object.value("y").toInt() * window->size().height() / MAX_HEIGHT_SAMPLES;
+        QPointF pos(x, y);
+        QPoint globalPos = window->mapToGlobal(QPoint(x, y));
+
+        int pixelDeltaX = object.value("delta_x").toInt();
+        int pixelDeltaY = object.value("delta_y").toInt();
+
+        int angleDeltaX = object.value("angle_x").toInt();
+        int angleDeltaY = object.value("angle_y").toInt();
+
+        Qt::ScrollPhase phase = static_cast<Qt::ScrollPhase>(object.value("phase").toInt());
+        int inverted = object.value("inverted").toBool();
+
+        return QWheelEvent(pos,
+                           globalPos,
+                           QPoint{pixelDeltaX, pixelDeltaY},
+                           QPoint{angleDeltaX, angleDeltaY},
+                           Qt::NoButton,
+                           Qt::NoModifier,
+                           phase,
+                           inverted);
     }
 };
 

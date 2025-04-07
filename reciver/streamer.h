@@ -35,6 +35,7 @@ private:
     bool m_isConnected = false;
     MouseEventFilter mouseEvent;
     QNetworkAccessManager manager;
+    EventSerializer eventSerializer;
 
     QString code;
     RemoteImageProvider *imageProivder = new RemoteImageProvider;

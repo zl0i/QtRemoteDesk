@@ -13,9 +13,10 @@ class EventSerializer
 private:
     static const inline int MAX_WIDTH_SAMPLES = 65535;
     static const inline int MAX_HEIGHT_SAMPLES = 65535;
+    QPoint lastMousePoint;
 
 public:
-    static QJsonObject serialize(QEvent *event, QSize windowSize)
+    QJsonObject serialize(QEvent *event, QSize windowSize)
     {
         QJsonObject json;
         json["type"] = event->type();
@@ -27,16 +28,29 @@ public:
             json["x"] = mouseEvent->pos().x() * MAX_WIDTH_SAMPLES / windowSize.width();
             json["y"] = mouseEvent->pos().y() * MAX_HEIGHT_SAMPLES / windowSize.height();
             json["modifiers"] = static_cast<qint64>(mouseEvent->modifiers());
+
+            lastMousePoint = mouseEvent->pos();
+
         } else if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease) {
             QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
             json["key"] = keyEvent->key();
             json["modifiers"] = static_cast<qint64>(keyEvent->modifiers());
             json["text"] = keyEvent->text();
+        } else if (event->type() == QEvent::Wheel) {
+            QWheelEvent *wheelEvent = static_cast<QWheelEvent *>(event);
+            json["angle_x"] = wheelEvent->angleDelta().x();
+            json["angle_y"] = wheelEvent->angleDelta().y();
+            json["inverted"] = wheelEvent->inverted();
+            json["delta_x"] = wheelEvent->pixelDelta().x();
+            json["delta_y"] = wheelEvent->pixelDelta().y();
+            json["phase"] = wheelEvent->phase();
+            json["x"] = lastMousePoint.x() * MAX_WIDTH_SAMPLES / windowSize.width();
+            json["y"] = lastMousePoint.y() * MAX_HEIGHT_SAMPLES / windowSize.height();
         }
         return json;
     }
 
-    static QEvent *deserialize(const QJsonObject &object, QQuickWindow *window)
+    QEvent *deserialize(const QJsonObject &object, QQuickWindow *window)
     {
         QEvent::Type type = static_cast<QEvent::Type>(object.value("type").toInteger());
         if (type == 0) {
@@ -66,7 +80,7 @@ public:
         return nullptr;
     }
 
-    static QPointF deserializeOnlyMouseMove(const QJsonObject &object, QSize windowSize)
+    QPointF deserializeOnlyMouseMove(const QJsonObject &object, QSize windowSize)
     {
         QEvent::Type type = static_cast<QEvent::Type>(object.value("type").toInteger());
         if (type == 0) {

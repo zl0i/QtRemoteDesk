@@ -73,7 +73,7 @@ void VideoReceiver::onVideoReceived(const QByteArray &message)
 void VideoReceiver::onEventReceived(const QByteArray &message)
 {
     QJsonDocument doc = QJsonDocument::fromJson(message);
-    QPointF point = EventSerializer::deserializeOnlyMouseMove(doc.object(), window->size());
+    QPointF point = eventSerializer.deserializeOnlyMouseMove(doc.object(), window->size());
     if (!point.isNull()) {
         emit mouseMove(point);
     }
@@ -82,7 +82,7 @@ void VideoReceiver::onEventReceived(const QByteArray &message)
 void VideoReceiver::sendEvent(QEvent *event)
 {
     if (eventSocket.isValid()) {
-        QJsonObject object = EventSerializer::serialize(event, window->size());
+        QJsonObject object = eventSerializer.serialize(event, window->size());
         eventSocket.sendBinaryMessage(QJsonDocument{object}.toJson());
     }
 }
