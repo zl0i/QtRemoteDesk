@@ -8,3 +8,4 @@ build/
 deploy/
 .qmlls.ini
 node_modules/
+.dist/

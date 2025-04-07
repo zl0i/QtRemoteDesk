@@ -4,6 +4,7 @@
   "main": "main.js",
   "scripts": {
     "start": "node main.js",
+    "build": "tsc",
     "dev": "ts-node main.ts"
   },
   "author": "",
