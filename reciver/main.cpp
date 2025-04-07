@@ -2,18 +2,21 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 
+#include "remoteimageprovider.h"
 #include "streamer.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    VideoReceiver reciver;
+    VideoReceiver *reciver = new VideoReceiver();
 
-    app.installEventFilter(reciver.eventFilter());
+    app.installEventFilter(reciver->eventFilter());
 
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("reciver", &reciver);
+    engine.rootContext()->setContextProperty("reciver", reciver);
+
+    engine.addImageProvider(RemoteImageProvider::description, reciver->imageProvider());
 
     QObject::connect(
         &engine,
@@ -22,7 +25,7 @@ int main(int argc, char *argv[])
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
     engine.loadFromModule("FPDeskReciver", "Main");
-    reciver.setQmlEngine(&engine);
+    reciver->setQmlEngine(&engine);
 
     return app.exec();
 }

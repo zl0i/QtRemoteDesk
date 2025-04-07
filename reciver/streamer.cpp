@@ -35,13 +35,15 @@ void VideoReceiver::connectVideo(QString code)
 
     QNetworkReply *reply = manager.get(req);
 
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, code]() {
         if (reply->error() != QNetworkReply::NoError) {
             qDebug() << reply->error() << reply->errorString();
             delete reply;
             return;
         }
 
+        this->code = code;
+        emit codeChanged();
         QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
 
         QJsonObject data = doc.object();
@@ -50,6 +52,7 @@ void VideoReceiver::connectVideo(QString code)
 
         imageSocket.open(QUrl(videoEndpoint + "/receiver"));
         eventUrl = QUrl(eventEndpoint + "/receiver");
+        imageProivder->addRemote(code, &imageSocket);
     });
 }
 
@@ -58,16 +61,12 @@ void VideoReceiver::disconnectFromServer()
     imageSocket.close();
     eventSocket.close();
     eventUrl.clear();
-}
-
-QByteArray VideoReceiver::videoFrame() const
-{
-    return m_currentFrame;
+    imageProivder->deleteRemote(code);
+    code.clear();
 }
 
 void VideoReceiver::onVideoReceived(const QByteArray &message)
 {
-    m_currentFrame = message;
     emit frameUpdated();
 }
 

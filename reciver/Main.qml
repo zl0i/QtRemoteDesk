@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtMultimedia
 
 ApplicationWindow {
+    id: _app
     width: 640
     height: 480
     visible: true
@@ -11,7 +12,8 @@ ApplicationWindow {
     Connections {
         target: reciver
         function onFrameUpdated() {
-            _image.source = reciver.videoFrame
+            _image.source = ""
+            _image.source = "image://remoteimage/" + reciver.code
         }
         function onMouseMove(point) {
             _cursor.x = point.x
@@ -21,8 +23,9 @@ ApplicationWindow {
 
     Image {
         id: _image
-        anchors.fill: parent
-        source: reciver.videoFrame
+        width: _app.width
+        height: _app.height
+        cache: false
     }
 
     Rectangle {

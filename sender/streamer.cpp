@@ -90,11 +90,8 @@ void StreamServer::broadcastFrame()
     b.open(QIODevice::WriteOnly);
     image.save(&b, "JPEG");
 
-    QByteArray base64 = buffer.toBase64();
-    QString dataUrl = "data:image/jpeg;base64," + QString::fromLatin1(base64);
-
     if (imageSocket.isValid()) {
-        imageSocket.sendTextMessage(dataUrl.toLocal8Bit());
+        imageSocket.sendBinaryMessage(b.buffer());
     }
 }
 

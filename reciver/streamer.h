@@ -11,29 +11,33 @@
 #include <QWebSocket>
 
 #include "mouseeventfilter.h"
+#include "remoteimageprovider.h"
 
 class VideoReceiver : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QByteArray videoFrame READ videoFrame NOTIFY frameUpdated)
     Q_PROPERTY(bool isConnected MEMBER m_isConnected NOTIFY connectionChanged)
+    Q_PROPERTY(QString code READ readCode NOTIFY codeChanged)
 
 public:
     explicit VideoReceiver(QObject *parent = nullptr);
 
     void setQmlEngine(QQmlApplicationEngine *engine);
-    QByteArray videoFrame() const;
     MouseEventFilter *eventFilter() { return &mouseEvent; };
+    QQuickImageProvider *imageProvider() { return imageProivder; };
+    QString readCode() { return code; }
 
 private:
     QQuickWindow *window;
     QWebSocket imageSocket;
     QUrl eventUrl;
     QWebSocket eventSocket;
-    QByteArray m_currentFrame;
     bool m_isConnected = false;
     MouseEventFilter mouseEvent;
     QNetworkAccessManager manager;
+
+    QString code;
+    RemoteImageProvider *imageProivder = new RemoteImageProvider;
 
 private slots:
     void onVideoReceived(const QByteArray &message);
@@ -56,6 +60,7 @@ signals:
     void frameUpdated();
     void mouseMove(QPointF p);
     void connectionChanged();
+    void codeChanged();
 };
 
 #endif // STREAMER_H
