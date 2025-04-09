@@ -12,8 +12,8 @@ ApplicationWindow {
     Connections {
         target: streamer
         function onRemoteMouseMove(point) {
-            _removeCursor.x = point.x
-            _removeCursor.y = point.y
+            _removeCursor.x = point.x - 5
+            _removeCursor.y = point.y - 5
         }
         function onWaitConnect(code) {
             _dialog.accessCode = code
@@ -44,7 +44,7 @@ ApplicationWindow {
         radius: 5
         visible: false
         opacity: 0.5
-        color: "blue"
+        color: "red"
     }
 
     Column {

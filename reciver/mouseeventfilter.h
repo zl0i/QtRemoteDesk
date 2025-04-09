@@ -7,6 +7,7 @@
 #include <QObject>
 #include <QPointF>
 #include <qquickwindow.h>
+#include <qtimer.h>
 
 class EventSerializer
 {
@@ -16,6 +17,11 @@ private:
     QPoint lastMousePoint;
 
 public:
+    enum RemoteUserEvent {
+        MouseClick = QEvent::User + 1,
+        KeyClick,
+    };
+
     QJsonObject serialize(QEvent *event, QSize windowSize)
     {
         QJsonObject json;
@@ -104,11 +110,27 @@ public:
 
     bool eventFilter(QObject *obj, QEvent *event) override;
 
+    void setWindow(const QQuickWindow *window) { this->window = window; };
+
+protected:
+    EventSerializer serializer;
+
 private:
+    const QQuickWindow *window = nullptr;
     QList<QEvent::Type> filter;
 
+    bool isFilterMousePress = false;
+    QTimer timerMouse;
+    bool isHaveMousePress = false;
+    QJsonObject sMouseEvent;
+
+    bool isFilterKeyPress = false;
+    QTimer timerKey;
+    bool isHaveKeyPress = false;
+    QJsonObject sKeyEvent;
+
 signals:
-    void newEvent(QEvent *event);
+    void newEvent(QJsonObject object);
 };
 
 #endif // MOUSEEVENTFILTER_H

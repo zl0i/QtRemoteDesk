@@ -44,7 +44,7 @@ private slots:
     void onVideoReceived(const QByteArray &message);
     void onEventReceived(const QByteArray &message);
 
-    void sendEvent(QEvent *event);
+    void sendEvent(QJsonObject object);
 
     void onConnectedVideo();
     void onDisconnectedVideo();
@@ -59,7 +59,6 @@ public slots:
 
 signals:
     void frameUpdated();
-    void mouseMove(QPointF p);
     void connectionChanged();
     void codeChanged();
 };

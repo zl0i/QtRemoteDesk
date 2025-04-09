@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QMouseEvent>
 #include <QObject>
+#include <QPair>
 #include <QPointF>
 #include <QWheelEvent>
 #include <qquickwindow.h>
@@ -21,7 +22,10 @@ public:
         KeyboardEvent,
         WheelEvent,
 
-        FirstVideoReceiverConnected = QEvent::User + 1,
+        MouseClick = QEvent::User + 1,
+        KeyClick,
+
+        FirstVideoReceiverConnected = 1501,
         NewVideoReceiverConnected,
         LastVideoReceiverDisconnected,
         EventReceiverConnected,
@@ -68,7 +72,7 @@ public:
         return json;
     }
 
-    static QMouseEvent deserializeMouseEvent(const QJsonObject &object, QQuickWindow *window)
+    static QEvent *deserializeMouseEvent(const QJsonObject &object, QQuickWindow *window)
     {
         QEvent::Type type = static_cast<QEvent::Type>(object.value("type").toInteger());
 
@@ -81,20 +85,58 @@ public:
         QPoint globalPos = window->mapToGlobal(QPoint(x, y));
         Qt::KeyboardModifiers modifiers = static_cast<Qt::KeyboardModifiers>(
             object["modifiers"].toInt());
-        return QMouseEvent(type, pos, globalPos, button, buttons, modifiers);
+        return new QMouseEvent(type, pos, globalPos, button, buttons, modifiers);
     }
 
-    static QKeyEvent deserializeKeyboardEvent(const QJsonObject &object)
+    static QEvent *deserializeKeyboardEvent(const QJsonObject &object)
     {
         QEvent::Type type = static_cast<QEvent::Type>(object.value("type").toInteger());
         int key = object["key"].toInt();
         Qt::KeyboardModifiers modifiers = static_cast<Qt::KeyboardModifiers>(
             object["modifiers"].toInt());
         QString text = object["text"].toString();
-        return QKeyEvent(type, key, modifiers, text);
+        return new QKeyEvent(type, key, modifiers, text);
     }
 
-    static QWheelEvent deserializeWheelEvent(const QJsonObject &object, QQuickWindow *window)
+    static QPair<QMouseEvent *, QMouseEvent *> deserializeMouseClick(const QJsonObject &object,
+                                                                     QQuickWindow *window)
+    {
+        Qt::MouseButton button = static_cast<Qt::MouseButton>(object["button"].toInteger());
+        Qt::MouseButtons buttons = QFlags(
+            static_cast<Qt::MouseButton>(object["buttons"].toInteger()));
+        double x = object["x"].toDouble() * window->size().width() / MAX_WIDTH_SAMPLES;
+        double y = object["y"].toDouble() * window->size().height() / MAX_HEIGHT_SAMPLES;
+        QPointF pos(x, y);
+        QPoint globalPos = window->mapToGlobal(QPoint(x, y));
+        Qt::KeyboardModifiers modifiers = static_cast<Qt::KeyboardModifiers>(
+            object["modifiers"].toInt());
+
+        QMouseEvent *press
+            = new QMouseEvent(QEvent::MouseButtonPress, pos, globalPos, button, buttons, modifiers);
+        QMouseEvent *release = new QMouseEvent(QEvent::MouseButtonRelease,
+                                               pos,
+                                               globalPos,
+                                               button,
+                                               buttons,
+                                               modifiers);
+
+        return {press, release};
+    }
+
+    static QPair<QKeyEvent *, QKeyEvent *> deserializeKeyboardClick(const QJsonObject &object)
+    {
+        int key = object["key"].toInt();
+        Qt::KeyboardModifiers modifiers = static_cast<Qt::KeyboardModifiers>(
+            object["modifiers"].toInt());
+        QString text = object["text"].toString();
+
+        QKeyEvent *press = new QKeyEvent(QEvent::KeyPress, key, modifiers, text);
+        QKeyEvent *release = new QKeyEvent(QEvent::KeyRelease, key, modifiers, text);
+
+        return {press, release};
+    }
+
+    static QWheelEvent *deserializeWheelEvent(const QJsonObject &object, QQuickWindow *window)
     {
         int x = object.value("x").toInt() * window->size().width() / MAX_WIDTH_SAMPLES;
         int y = object.value("y").toInt() * window->size().height() / MAX_HEIGHT_SAMPLES;
@@ -110,14 +152,14 @@ public:
         Qt::ScrollPhase phase = static_cast<Qt::ScrollPhase>(object.value("phase").toInt());
         int inverted = object.value("inverted").toBool();
 
-        return QWheelEvent(pos,
-                           globalPos,
-                           QPoint{pixelDeltaX, pixelDeltaY},
-                           QPoint{angleDeltaX, angleDeltaY},
-                           Qt::NoButton,
-                           Qt::NoModifier,
-                           phase,
-                           inverted);
+        return new QWheelEvent(pos,
+                               globalPos,
+                               QPoint{pixelDeltaX, pixelDeltaY},
+                               QPoint{angleDeltaX, angleDeltaY},
+                               Qt::NoButton,
+                               Qt::NoModifier,
+                               phase,
+                               inverted);
     }
 };
 

@@ -15,10 +15,6 @@ ApplicationWindow {
             _image.source = ""
             _image.source = "image://remoteimage/" + reciver.code
         }
-        function onMouseMove(point) {
-            _cursor.x = point.x
-            _cursor.y = point.y
-        }
     }
 
     Image {
@@ -26,16 +22,6 @@ ApplicationWindow {
         width: _app.width
         height: _app.height
         cache: false
-    }
-
-    Rectangle {
-        id: _cursor
-        width: 10
-        height: 10
-        radius: 5
-        visible: reciver.isConnected
-        opacity: 0.5
-        color: "red"
     }
 
     Rectangle {

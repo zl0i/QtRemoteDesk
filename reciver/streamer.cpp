@@ -26,6 +26,7 @@ void VideoReceiver::setQmlEngine(QQmlApplicationEngine *engine)
     if (!engine->rootObjects().isEmpty()) {
         QObject *rootObject = engine->rootObjects().first();
         window = qobject_cast<QQuickWindow *>(rootObject);
+        mouseEvent.setWindow(window);
     }
 }
 
@@ -72,17 +73,12 @@ void VideoReceiver::onVideoReceived(const QByteArray &message)
 
 void VideoReceiver::onEventReceived(const QByteArray &message)
 {
-    QJsonDocument doc = QJsonDocument::fromJson(message);
-    QPointF point = eventSerializer.deserializeOnlyMouseMove(doc.object(), window->size());
-    if (!point.isNull()) {
-        emit mouseMove(point);
-    }
+
 }
 
-void VideoReceiver::sendEvent(QEvent *event)
+void VideoReceiver::sendEvent(QJsonObject object)
 {
     if (eventSocket.isValid()) {
-        QJsonObject object = eventSerializer.serialize(event, window->size());
         eventSocket.sendBinaryMessage(QJsonDocument{object}.toJson());
     }
 }

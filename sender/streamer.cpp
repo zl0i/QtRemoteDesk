@@ -92,19 +92,30 @@ void StreamServer::captureAndSendScreen(int quality)
 void StreamServer::eventRecived(const QByteArray &message)
 {
     QJsonDocument doc = QJsonDocument::fromJson(message);
-    auto source = EventFactory::sourceEvent(doc.object());
+    QJsonObject object = doc.object();
+
+    auto source = EventFactory::sourceEvent(object);
     if (source == EventFactory::MouseEvent) {
-        QMouseEvent event = EventFactory::deserializeMouseEvent(doc.object(), window);
-        if (event.type() == QEvent::MouseMove) {
-            emit remoteMouseMove(event.pos());
+        auto *event = EventFactory::deserializeMouseEvent(object, window);
+        if (event->type() == QEvent::MouseMove) {
+            QMouseEvent *move = static_cast<QMouseEvent *>(event);
+            emit remoteMouseMove(move->pos());
         }
-        QCoreApplication::sendEvent(window, &event);
+        QCoreApplication::postEvent(window, event);
     } else if (source == EventFactory::KeyboardEvent) {
-        QKeyEvent event = EventFactory::deserializeKeyboardEvent(doc.object());
-        QCoreApplication::sendEvent(window, &event);
+        auto *event = EventFactory::deserializeKeyboardEvent(object);
+        QCoreApplication::postEvent(window, event);
+    } else if (source == EventFactory::MouseClick) {
+        auto events = EventFactory::deserializeMouseClick(object, window);
+        QCoreApplication::postEvent(window, events.first);
+        QCoreApplication::postEvent(window, events.second);
+    } else if (source == EventFactory::KeyClick) {
+        auto events = EventFactory::deserializeKeyboardClick(object);
+        QCoreApplication::postEvent(window, events.first);
+        QCoreApplication::postEvent(window, events.second);
     } else if (source == EventFactory::WheelEvent) {
-        QWheelEvent event = EventFactory::deserializeWheelEvent(doc.object(), window);
-        QCoreApplication::sendEvent(window, &event);
+        QWheelEvent *event = EventFactory::deserializeWheelEvent(object, window);
+        QCoreApplication::postEvent(window, event);
     } else if (source == EventFactory::FirstVideoReceiverConnected) {
         emit videoReceiverConnected();
     } else if (source == EventFactory::EventReceiverConnected) {
@@ -115,8 +126,10 @@ void StreamServer::eventRecived(const QByteArray &message)
 void StreamServer::sendEvent(QEvent *event)
 {
     if (eventSocket.isValid()) {
-        QJsonObject object = EventFactory::serialize(event, window->size());
-        eventSocket.sendBinaryMessage(QJsonDocument{object}.toJson());
+        if (event->type() != QEvent::KeyPress || event->type() != QEvent::KeyRelease) {
+            QJsonObject object = EventFactory::serialize(event, window->size());
+            eventSocket.sendBinaryMessage(QJsonDocument{object}.toJson());
+        }
     }
 }
 

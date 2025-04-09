@@ -4,11 +4,11 @@ import { type Room, roomManager } from './roommanager';
 const WS_PORT = Number(process.env["WS_PORT"]) || 8080;
 
 enum Event {
-    FirstVideoReceiverConnected = 1001,
-    NewVideoReceiverConnected = 1002,
-    LastVideoReceiverDisconnected = 1003,
-    EventReceiverConnected = 1004,
-    EventReceiverDisconnected = 1005
+    FirstVideoReceiverConnected = 1501,
+    NewVideoReceiverConnected = 1502,
+    LastVideoReceiverDisconnected = 1503,
+    EventReceiverConnected = 1504,
+    EventReceiverDisconnected = 1505
 }
 
 
