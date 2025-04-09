@@ -1,4 +1,4 @@
-import { api } from "./src/api";
+import { api } from "./api/api";
 import { roomsServer } from "./src/roomsserver";
 
 
