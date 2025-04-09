@@ -40,6 +40,7 @@ void VideoReceiver::setQmlEngine(QQmlApplicationEngine *engine)
 void VideoReceiver::connectVideo(QString code)
 {
     QNetworkRequest req(QUrl("http://localhost:3000/rooms/" + code));
+    req.setRawHeader("Authorization", "Bearer " + apiToken.toLocal8Bit());
 
     QNetworkReply *reply = manager.get(req);
 
@@ -58,9 +59,12 @@ void VideoReceiver::connectVideo(QString code)
         QString videoEndpoint = data.value("ws_video").toString();
         QString eventEndpoint = data.value("ws_events").toString();
 
-        imageSocket.open(QUrl(videoEndpoint + "/receiver"));
-        eventUrl = QUrl(eventEndpoint + "/receiver");
+        QNetworkRequest videoRequest(QUrl(videoEndpoint + "/receiver"));
+        videoRequest.setRawHeader("Authorization", "Bearer " + apiToken.toLocal8Bit());
+        imageSocket.open(videoRequest);
         imageProivder->addRemote(code, &imageSocket);
+
+        eventUrl = QUrl(eventEndpoint + "/receiver");
     });
 }
 
@@ -103,5 +107,7 @@ void VideoReceiver::onDisconnectedEvent() {}
 
 void VideoReceiver::connectEvent()
 {
-    eventSocket.open(eventUrl);
+    QNetworkRequest eventRequest(eventUrl);
+    eventRequest.setRawHeader("Authorization", "Bearer " + apiToken.toLocal8Bit());
+    eventSocket.open(eventRequest);
 }

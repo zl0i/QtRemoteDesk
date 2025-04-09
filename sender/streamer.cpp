@@ -130,6 +130,7 @@ void AppStreamer::serverEvent(EventFactory::EventSource e)
 void AppStreamer::start()
 {
     QNetworkRequest req(QUrl("http://localhost:3000/rooms"));
+    req.setRawHeader("Authorization", "Bearer " + apiToken.toLocal8Bit());
 
     QNetworkReply *reply = manager.post(req, QByteArray{});
 
@@ -146,8 +147,13 @@ void AppStreamer::start()
         QString videoEndpoint = data.value("ws_video").toString();
         QString eventEndpoint = data.value("ws_events").toString();
 
-        imageSocket.open(QUrl(videoEndpoint + "/sender"));
-        eventSocket.open(QUrl(eventEndpoint + "/sender"));
+        QNetworkRequest videoRequest(QUrl(videoEndpoint + "/sender"));
+        videoRequest.setRawHeader("Authorization", "Bearer " + apiToken.toLocal8Bit());
+        imageSocket.open(videoRequest);
+
+        QNetworkRequest eventRequest(QUrl(eventEndpoint + "/sender"));
+        eventRequest.setRawHeader("Authorization", "Bearer " + apiToken.toLocal8Bit());
+        eventSocket.open(eventRequest);
 
         emit waitConnect(data.value("code").toString());
     });

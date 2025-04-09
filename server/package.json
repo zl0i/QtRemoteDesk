@@ -5,12 +5,13 @@
   "scripts": {
     "start": "node main.js",
     "build": "tsc",
-    "dev": "ts-node main.ts"
+    "dev": "env-cmd ts-node main.ts"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "env-cmd": "^10.1.0",
     "express": "^5.1.0",
     "morgan": "^1.10.0",
     "ts-node": "^10.9.2",

@@ -43,6 +43,7 @@ private:
     EventManager eventManager;
     QNetworkAccessManager manager;
     FpsRater fpsRater;
+    const QString apiToken = "<token>";
 
 private slots:
     void onConnectedVideo();

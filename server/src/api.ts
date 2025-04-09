@@ -1,9 +1,10 @@
 import express from "express";
 import morgan from "morgan";
 import { roomManager } from "./roommanager";
+import { auth } from "./middleware";
 
 const HTTP_PORT = process.env["HTTP_PORT"] || 3000;
-const WS_HOST = process.env["WS_PORT"] || "localhost";
+const WS_HOST = process.env["WS_HOST"] || "localhost";
 const WS_PORT = process.env["WS_PORT"] || 8080;
 
 const api = express();
@@ -13,6 +14,8 @@ api.use(express.urlencoded({ extended: false }));
 api.set('port', HTTP_PORT);
 
 api.use(morgan(':date[iso] :req[x-forwarded-for] :method :url :status :response-time ms'));
+
+api.use(auth());
 
 api.get("/rooms/:code", (req, res) => {
     const { code } = req.params;

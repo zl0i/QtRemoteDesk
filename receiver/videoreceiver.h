@@ -40,6 +40,8 @@ private:
     QString code;
     RemoteImageProvider *imageProivder;
 
+    const QString apiToken = "<token>";
+
 private slots:
     void onEventReceived(const QByteArray &message);
 

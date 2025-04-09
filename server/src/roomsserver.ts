@@ -1,6 +1,7 @@
 import WebSocket, { WebSocketServer } from 'ws';
 import { type Room, roomManager } from './roommanager';
 
+const API_TOKEN = process.env["API_TOKEN"] || "secret";
 const WS_PORT = Number(process.env["WS_PORT"]) || 8080;
 
 enum Event {
@@ -61,6 +62,12 @@ class RoomsServer {
                 ws.close();
                 return;
             }
+            if (req.headers.authorization !== `Bearer ${API_TOKEN}`) {
+                ws.close();
+                return;
+            }
+
+
             const paths = req.url.split('/');
             const roomCode = paths[2]
             const typeConnect = paths[3] //events or video
