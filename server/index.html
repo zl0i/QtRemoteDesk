@@ -9,7 +9,6 @@
     </p>
     <div><img id="stream" /></div>
     <script>
-      const enc = new TextDecoder();
       let ws = null;
 
       document.getElementById('connect').addEventListener('click', () => {
@@ -17,7 +16,12 @@
         ws = new WebSocket(`ws://localhost:8080/rooms/${code}/video/receiver`);
         ws.binaryType = 'arraybuffer';
         ws.onmessage = (event) => {
-          document.getElementById('stream').src = enc.decode(event.data);
+          const arrayBuffer = event.data;
+          const blob = new Blob([arrayBuffer], { type: 'image/jpeg' });
+
+          // Создаем временный URL и вставляем в <img>
+          const imgURL = URL.createObjectURL(blob);
+          document.getElementById('stream').src = imgURL;
         };
         ws.onclose = () => {
           ws = null;
