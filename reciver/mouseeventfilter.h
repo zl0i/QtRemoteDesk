@@ -119,15 +119,18 @@ private:
     const QQuickWindow *window = nullptr;
     QList<QEvent::Type> filter;
 
-    bool isFilterMousePress = false;
+    const bool isFilterMousePress = false;
     QTimer timerMouse;
     bool isHaveMousePress = false;
     QJsonObject sMouseEvent;
 
-    bool isFilterKeyPress = false;
+    const bool isFilterKeyPress = false;
     QTimer timerKey;
     bool isHaveKeyPress = false;
     QJsonObject sKeyEvent;
+
+    const bool isFilterMouseMove = false;
+    QTimer timerMove;
 
 signals:
     void newEvent(QJsonObject object);
