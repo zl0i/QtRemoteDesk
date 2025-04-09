@@ -18,18 +18,18 @@
 #include <qqmlapplicationengine.h>
 
 #include "fpsrater.h"
-#include "mouseeventfilter.h"
+#include "eventmanager.h"
 
-class StreamServer : public QObject
+class AppStreamer : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool isConnected READ readIsConnected NOTIFY isConnectedChanged FINAL)
 public:
-    StreamServer(QObject *parent = nullptr);
+    AppStreamer(QObject *parent = nullptr);
 
     void setQmlEngine(QQmlApplicationEngine *engine);
 
-    MouseEventFilter *eventFilter();
+    EventManager *eventFilter();
 
     bool readIsConnected() { return isConnected; }
 
@@ -40,7 +40,7 @@ private:
     QWebSocket eventSocket;
     bool isConnected{false};
 
-    MouseEventFilter mouseEvent;
+    EventManager eventManager;
     QNetworkAccessManager manager;
     FpsRater fpsRater;
 
@@ -54,6 +54,7 @@ private slots:
     void captureAndSendScreen(int quality);
     void eventRecived(const QByteArray &message);
     void sendEvent(QEvent *event);
+    void serverEvent(EventFactory::EventSource e);
 
 public slots:
     void start();
@@ -64,6 +65,7 @@ signals:
 
     void remoteMouseMove(QPoint p);
     void waitConnect(QString code);
+
     void videoReceiverConnected();
     void eventReceiverConnected();
 };

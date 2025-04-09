@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-    StreamServer streamer(&engine);
+    AppStreamer streamer(&engine);
     app.installEventFilter(streamer.eventFilter());
     engine.rootContext()->setContextProperty("streamer", &streamer);
 

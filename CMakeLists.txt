@@ -6,4 +6,4 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 add_subdirectory(sender)
-add_subdirectory(reciver)
+add_subdirectory(receiver)

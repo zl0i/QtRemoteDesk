@@ -1,5 +1,5 @@
-#ifndef STREAMER_H
-#define STREAMER_H
+#ifndef VIDEORECEIVER_H
+#define VIDEORECEIVER_H
 
 #include <QImage>
 #include <QJsonDocument>
@@ -61,4 +61,4 @@ signals:
     void codeChanged();
 };
 
-#endif // STREAMER_H
+#endif // VIDEORECEIVER_H

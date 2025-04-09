@@ -7,13 +7,13 @@ ApplicationWindow {
     width: 640
     height: 480
     visible: true
-    title: qsTr("FPDesk Reciver")
+    title: qsTr("FPDesk Receiver")
 
     Connections {
-        target: reciver
+        target: receiver
         function onFrameUpdated() {
             _image.source = ""
-            _image.source = "image://remoteimage/" + reciver.code
+            _image.source = "image://remoteimage/" + receiver.code
         }
     }
 
@@ -42,20 +42,20 @@ ApplicationWindow {
 
             Button {
                 text: "Connect"
-                enabled: !reciver.isConnected
-                onClicked: reciver.connectVideo(_codeField.text)
+                enabled: !receiver.isConnected
+                onClicked: receiver.connectVideo(_codeField.text)
             }
 
             Button {
                 text: "Disconnect"
-                enabled: reciver.isConnected
-                onClicked: reciver.disconnectFromServer()
+                enabled: receiver.isConnected
+                onClicked: receiver.disconnectFromServer()
             }
 
             Button {
                 text: "Control"
-                enabled: reciver.isConnected
-                onClicked: reciver.connectEvent()
+                enabled: receiver.isConnected
+                onClicked: receiver.connectEvent()
             }
         }
     }

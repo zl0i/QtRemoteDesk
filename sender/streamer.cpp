@@ -1,62 +1,65 @@
 #include "streamer.h"
 
-StreamServer::StreamServer(QObject *parent)
+AppStreamer::AppStreamer(QObject *parent)
     : QObject(parent)
-    , mouseEvent({QEvent::MouseMove})
+    , eventManager({QEvent::MouseMove})
     , fpsRater(&imageSocket)
 {
-    connect(&fpsRater, &FpsRater::sendFrame, this, &StreamServer::captureAndSendScreen);
+    connect(&fpsRater, &FpsRater::sendFrame, this, &AppStreamer::captureAndSendScreen);
 
-    connect(&imageSocket, &QWebSocket::connected, this, &StreamServer::onConnectedVideo);
-    connect(&imageSocket, &QWebSocket::disconnected, this, &StreamServer::onDisconnectedVideo);
-    connect(&imageSocket, &QWebSocket::errorOccurred, this, &StreamServer::onError);
+    connect(&imageSocket, &QWebSocket::connected, this, &AppStreamer::onConnectedVideo);
+    connect(&imageSocket, &QWebSocket::disconnected, this, &AppStreamer::onDisconnectedVideo);
+    connect(&imageSocket, &QWebSocket::errorOccurred, this, &AppStreamer::onError);
 
-    connect(&eventSocket, &QWebSocket::connected, this, &StreamServer::onConnectedEvent);
-    connect(&eventSocket, &QWebSocket::disconnected, this, &StreamServer::onDisconnectedEvent);
-    connect(&eventSocket, &QWebSocket::errorOccurred, this, &StreamServer::onError);
-    connect(&eventSocket, &QWebSocket::binaryMessageReceived, this, &StreamServer::eventRecived);
+    connect(&eventSocket, &QWebSocket::connected, this, &AppStreamer::onConnectedEvent);
+    connect(&eventSocket, &QWebSocket::disconnected, this, &AppStreamer::onDisconnectedEvent);
+    connect(&eventSocket, &QWebSocket::errorOccurred, this, &AppStreamer::onError);
+    connect(&eventSocket, &QWebSocket::binaryMessageReceived, this, &AppStreamer::eventRecived);
 
-    connect(&mouseEvent, &MouseEventFilter::newEvent, this, &StreamServer::sendEvent);
+    connect(&eventManager, &EventManager::newEvent, this, &AppStreamer::sendEvent);
+    connect(&eventManager, &EventManager::serverEvent, this, &AppStreamer::serverEvent);
+    connect(&eventManager, &EventManager::remoteMouseMove, this, &AppStreamer::remoteMouseMove);
 }
 
-void StreamServer::setQmlEngine(QQmlApplicationEngine *engine)
+void AppStreamer::setQmlEngine(QQmlApplicationEngine *engine)
 {
     if (!engine->rootObjects().isEmpty()) {
         QObject *rootObject = engine->rootObjects().first();
         window = qobject_cast<QQuickWindow *>(rootObject);
+        eventManager.setQQuickWindow(window);
     }
 }
 
-MouseEventFilter *StreamServer::eventFilter()
+EventManager *AppStreamer::eventFilter()
 {
-    return &mouseEvent;
+    return &eventManager;
 }
 
-void StreamServer::onConnectedVideo()
+void AppStreamer::onConnectedVideo()
 {
     fpsRater.start();
     qDebug() << "Connected to server";
 }
 
-void StreamServer::onDisconnectedVideo()
+void AppStreamer::onDisconnectedVideo()
 {
     qDebug() << "Disconnected video from server";
 }
 
-void StreamServer::onConnectedEvent()
+void AppStreamer::onConnectedEvent()
 {
     isConnected = true;
     emit isConnectedChanged();
 }
 
-void StreamServer::onDisconnectedEvent()
+void AppStreamer::onDisconnectedEvent()
 {
     isConnected = false;
     emit isConnectedChanged();
     qDebug() << "Disconnected event from server";
 }
 
-void StreamServer::onError(QAbstractSocket::SocketError error)
+void AppStreamer::onError(QAbstractSocket::SocketError error)
 {
     fpsRater.stop();
     if (imageSocket.isValid()) {
@@ -68,14 +71,10 @@ void StreamServer::onError(QAbstractSocket::SocketError error)
     qWarning() << "WebSocket error:" << error;
 }
 
-void StreamServer::captureAndSendScreen(int quality)
+void AppStreamer::captureAndSendScreen(int quality)
 {
-    // QScreen *screen = QGuiApplication::primaryScreen();
     if (!window)
         return;
-
-    // QPixmap pixmap = screen->grabWindow(0);
-    // QImage image = //pixmap.toImage().scaled(800, 600, Qt::KeepAspectRatio);
 
     QImage image = window->grabWindow();
 
@@ -89,41 +88,14 @@ void StreamServer::captureAndSendScreen(int quality)
     }
 }
 
-void StreamServer::eventRecived(const QByteArray &message)
+void AppStreamer::eventRecived(const QByteArray &message)
 {
     QJsonDocument doc = QJsonDocument::fromJson(message);
     QJsonObject object = doc.object();
-
-    auto source = EventFactory::sourceEvent(object);
-    if (source == EventFactory::MouseEvent) {
-        auto *event = EventFactory::deserializeMouseEvent(object, window);
-        if (event->type() == QEvent::MouseMove) {
-            QMouseEvent *move = static_cast<QMouseEvent *>(event);
-            emit remoteMouseMove(move->pos());
-        }
-        QCoreApplication::postEvent(window, event);
-    } else if (source == EventFactory::KeyboardEvent) {
-        auto *event = EventFactory::deserializeKeyboardEvent(object);
-        QCoreApplication::postEvent(window, event);
-    } else if (source == EventFactory::MouseClick) {
-        auto events = EventFactory::deserializeMouseClick(object, window);
-        QCoreApplication::postEvent(window, events.first);
-        QCoreApplication::postEvent(window, events.second);
-    } else if (source == EventFactory::KeyClick) {
-        auto events = EventFactory::deserializeKeyboardClick(object);
-        QCoreApplication::postEvent(window, events.first);
-        QCoreApplication::postEvent(window, events.second);
-    } else if (source == EventFactory::WheelEvent) {
-        QWheelEvent *event = EventFactory::deserializeWheelEvent(object, window);
-        QCoreApplication::postEvent(window, event);
-    } else if (source == EventFactory::FirstVideoReceiverConnected) {
-        emit videoReceiverConnected();
-    } else if (source == EventFactory::EventReceiverConnected) {
-        emit eventReceiverConnected();
-    }
+    eventManager.handleRemoteEvent(object);
 }
 
-void StreamServer::sendEvent(QEvent *event)
+void AppStreamer::sendEvent(QEvent *event)
 {
     if (eventSocket.isValid()) {
         if (event->type() != QEvent::KeyPress || event->type() != QEvent::KeyRelease) {
@@ -133,7 +105,29 @@ void StreamServer::sendEvent(QEvent *event)
     }
 }
 
-void StreamServer::start()
+void AppStreamer::serverEvent(EventFactory::EventSource e)
+{
+    switch (e) {
+    case EventFactory::FirstVideoReceiverConnected:
+        emit videoReceiverConnected();
+        return;
+    case EventFactory::NewVideoReceiverConnected:
+    case EventFactory::LastVideoReceiverDisconnected:
+    case EventFactory::EventReceiverConnected:
+        emit eventReceiverConnected();
+        return;
+    case EventFactory::EventReceiverDisconnected:
+    case EventFactory::MouseEvent:
+    case EventFactory::KeyboardEvent:
+    case EventFactory::WheelEvent:
+    case EventFactory::MouseClick:
+    case EventFactory::KeyClick:
+    case EventFactory::UnknowEvent:
+        break;
+    }
+}
+
+void AppStreamer::start()
 {
     QNetworkRequest req(QUrl("http://localhost:3000/rooms"));
 
@@ -159,7 +153,7 @@ void StreamServer::start()
     });
 }
 
-void StreamServer::stop()
+void AppStreamer::stop()
 {
     fpsRater.stop();
     imageSocket.close();

@@ -1,4 +1,4 @@
-#include "streamer.h"
+#include "videoreceiver.h"
 
 VideoReceiver::VideoReceiver(QObject *parent)
     : QObject(parent)
