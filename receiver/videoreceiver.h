@@ -21,9 +21,10 @@ class VideoReceiver : public QObject
 
 public:
     explicit VideoReceiver(QObject *parent = nullptr);
+    virtual ~VideoReceiver();
 
     void setQmlEngine(QQmlApplicationEngine *engine);
-    EventManager *eventFilter() { return &mouseEvent; };
+    EventManager *eventFilter() { return &eventManager; };
     QQuickImageProvider *imageProvider() { return imageProivder; };
     QString readCode() { return code; }
 
@@ -33,11 +34,11 @@ private:
     QUrl eventUrl;
     QWebSocket eventSocket;
     bool m_isConnected = false;
-    EventManager mouseEvent;
+    EventManager eventManager;
     QNetworkAccessManager manager;
 
     QString code;
-    RemoteImageProvider *imageProivder = new RemoteImageProvider;
+    RemoteImageProvider *imageProivder;
 
 private slots:
     void onEventReceived(const QByteArray &message);

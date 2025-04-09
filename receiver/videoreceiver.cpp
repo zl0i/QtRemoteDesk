@@ -2,13 +2,15 @@
 
 VideoReceiver::VideoReceiver(QObject *parent)
     : QObject(parent)
-    , mouseEvent({QEvent::MouseButtonPress,
-                  QEvent::MouseButtonRelease,
-                  QEvent::MouseMove,
-                  QEvent::MouseButtonDblClick,
-                  QEvent::KeyPress,
-                  QEvent::KeyRelease,
-                  QEvent::Wheel})
+    , eventManager({QEvent::MouseButtonPress,
+                    QEvent::MouseButtonRelease,
+                    QEvent::MouseMove,
+                    QEvent::MouseButtonDblClick,
+                    QEvent::KeyPress,
+                    QEvent::KeyRelease,
+                    QEvent::Wheel},
+                   parent)
+    , imageProivder(new RemoteImageProvider())
 {
     connect(&imageSocket, &QWebSocket::connected, this, &VideoReceiver::onConnectedVideo);
     connect(&imageSocket, &QWebSocket::disconnected, this, &VideoReceiver::onDisconnectedVideo);
@@ -18,7 +20,12 @@ VideoReceiver::VideoReceiver(QObject *parent)
     connect(&eventSocket, &QWebSocket::disconnected, this, &VideoReceiver::onDisconnectedEvent);
     connect(&eventSocket, &QWebSocket::binaryMessageReceived, this, &VideoReceiver::onEventReceived);
 
-    connect(&mouseEvent, &EventManager::newEvent, this, &VideoReceiver::sendEvent);
+    connect(&eventManager, &EventManager::newEvent, this, &VideoReceiver::sendEvent);
+}
+
+VideoReceiver::~VideoReceiver()
+{
+    imageProivder->deleteLater();
 }
 
 void VideoReceiver::setQmlEngine(QQmlApplicationEngine *engine)
@@ -26,7 +33,7 @@ void VideoReceiver::setQmlEngine(QQmlApplicationEngine *engine)
     if (!engine->rootObjects().isEmpty()) {
         QObject *rootObject = engine->rootObjects().first();
         window = qobject_cast<QQuickWindow *>(rootObject);
-        mouseEvent.setWindow(window);
+        eventManager.setWindow(window);
     }
 }
 

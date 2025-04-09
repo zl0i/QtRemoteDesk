@@ -9,13 +9,11 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    VideoReceiver *receiver = new VideoReceiver();
-
-    app.installEventFilter(receiver->eventFilter());
-
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("receiver", receiver);
 
+    VideoReceiver *receiver = new VideoReceiver();
+    app.installEventFilter(receiver->eventFilter());
+    engine.rootContext()->setContextProperty("receiver", receiver);
     engine.addImageProvider(RemoteImageProvider::description, receiver->imageProvider());
 
     QObject::connect(
