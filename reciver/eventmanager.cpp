@@ -1,6 +1,6 @@
-#include "mouseeventfilter.h"
+#include "eventmanager.h"
 
-MouseEventFilter::MouseEventFilter(QList<QEvent::Type> filter, QObject *parent)
+EventManager::EventManager(QList<QEvent::Type> filter, QObject *parent)
     : QObject{parent}
     , filter(filter)
     , isFilterMousePress(filter.contains(QEvent::MouseButtonPress))
@@ -35,7 +35,7 @@ MouseEventFilter::MouseEventFilter(QList<QEvent::Type> filter, QObject *parent)
     }
 }
 
-bool MouseEventFilter::eventFilter(QObject *obj, QEvent *event)
+bool EventManager::eventFilter(QObject *obj, QEvent *event)
 {
     QSize size = window ? window->size() : QSize{};
     if (filter.contains(event->type())

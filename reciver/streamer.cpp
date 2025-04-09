@@ -12,13 +12,13 @@ VideoReceiver::VideoReceiver(QObject *parent)
 {
     connect(&imageSocket, &QWebSocket::connected, this, &VideoReceiver::onConnectedVideo);
     connect(&imageSocket, &QWebSocket::disconnected, this, &VideoReceiver::onDisconnectedVideo);
-    connect(&imageSocket, &QWebSocket::binaryMessageReceived, this, &VideoReceiver::onVideoReceived);
+    connect(&imageSocket, &QWebSocket::binaryMessageReceived, this, &VideoReceiver::frameUpdated);
 
     connect(&eventSocket, &QWebSocket::connected, this, &VideoReceiver::onConnectedEvent);
     connect(&eventSocket, &QWebSocket::disconnected, this, &VideoReceiver::onDisconnectedEvent);
     connect(&eventSocket, &QWebSocket::binaryMessageReceived, this, &VideoReceiver::onEventReceived);
 
-    connect(&mouseEvent, &MouseEventFilter::newEvent, this, &VideoReceiver::sendEvent);
+    connect(&mouseEvent, &EventManager::newEvent, this, &VideoReceiver::sendEvent);
 }
 
 void VideoReceiver::setQmlEngine(QQmlApplicationEngine *engine)
@@ -66,14 +66,9 @@ void VideoReceiver::disconnectFromServer()
     code.clear();
 }
 
-void VideoReceiver::onVideoReceived(const QByteArray &message)
-{
-    emit frameUpdated();
-}
-
 void VideoReceiver::onEventReceived(const QByteArray &message)
 {
-
+    //hande server event
 }
 
 void VideoReceiver::sendEvent(QJsonObject object)

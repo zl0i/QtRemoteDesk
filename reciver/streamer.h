@@ -10,7 +10,7 @@
 #include <QQmlApplicationEngine>
 #include <QWebSocket>
 
-#include "mouseeventfilter.h"
+#include "eventmanager.h"
 #include "remoteimageprovider.h"
 
 class VideoReceiver : public QObject
@@ -23,7 +23,7 @@ public:
     explicit VideoReceiver(QObject *parent = nullptr);
 
     void setQmlEngine(QQmlApplicationEngine *engine);
-    MouseEventFilter *eventFilter() { return &mouseEvent; };
+    EventManager *eventFilter() { return &mouseEvent; };
     QQuickImageProvider *imageProvider() { return imageProivder; };
     QString readCode() { return code; }
 
@@ -33,15 +33,13 @@ private:
     QUrl eventUrl;
     QWebSocket eventSocket;
     bool m_isConnected = false;
-    MouseEventFilter mouseEvent;
+    EventManager mouseEvent;
     QNetworkAccessManager manager;
-    EventSerializer eventSerializer;
 
     QString code;
     RemoteImageProvider *imageProivder = new RemoteImageProvider;
 
 private slots:
-    void onVideoReceived(const QByteArray &message);
     void onEventReceived(const QByteArray &message);
 
     void sendEvent(QJsonObject object);

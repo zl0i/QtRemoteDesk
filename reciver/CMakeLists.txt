@@ -19,8 +19,9 @@ qt_add_qml_module(reciverFPDesk
         Main.qml
         SOURCES streamer.h streamer.cpp
         SOURCES
-        SOURCES mouseeventfilter.h mouseeventfilter.cpp
+        SOURCES eventmanager.h eventmanager.cpp
         SOURCES remoteimageprovider.h remoteimageprovider.cpp
+        SOURCES eventserializer.h eventserializer.cpp
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
