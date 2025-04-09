@@ -13,6 +13,13 @@ export const httpRequestDurationMicroseconds = new client.Histogram({
     buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10]
 });
 
+export const roomstGauge = new client.Gauge({
+    name: 'remoteaccess_rooms_gauge',
+    help: 'Count of Rooms',
+    labelNames: []
+});
+
 register.registerMetric(httpRequestDurationMicroseconds);
+register.registerMetric(roomstGauge);
 
 export { register };

@@ -1,4 +1,5 @@
 import type WebSocket from 'ws';
+import { roomstGauge } from './metrics';
 
 export interface Room {
     code: string;
@@ -36,6 +37,7 @@ class RoomManager {
             lastActivity: Date.now()
         };
         this.rooms.set(roomCode, room);
+        roomstGauge.inc();
         return roomCode;
     }
 
@@ -47,6 +49,7 @@ class RoomManager {
     }
 
     deleteRoom(roomCode: string) {
+        roomstGauge.dec();
         this.rooms.delete(roomCode);
     }
 
