@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
-    "start": "node main.js",
+    "start": "env-cmd node .dist/main.js",
     "build": "tsc",
     "dev": "env-cmd ts-node main.ts"
   },
